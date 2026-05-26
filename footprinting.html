@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Footprinting Toolkit — @codebites26</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --c: #00ff9d;
+  --c2: #00d4ff;
+  --p: #7c3aed;
+  --bg: #020408;
+  --s1: #060c10;
+  --s2: #0a1218;
+  --s3: #0f1a22;
+  --br: rgba(0,255,157,.1);
+  --br2: rgba(0,212,255,.1);
+  --tx: #c8e8d0;
+  --mu: #3a6650;
+  --rd: #ff3355;
+  --wn: #ffaa00;
+  --cursor: rgba(0,255,157,0.7);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+/* custom cursor */
+* { cursor: none !important; }
+#cursor {
+  position: fixed; width: 12px; height: 12px;
+  border: 1.5px solid var(--c); border-radius: 50%;
+  pointer-events: none; z-index: 99999;
+  transform: translate(-50%,-50%);
+  transition: width .15s, height .15s, opacity .15s;
+  mix-blend-mode: screen;
+}
+#cursor-dot {
+  position: fixed; width: 4px; height: 4px;
+  background: var(--c); border-radius: 50%;
+  pointer-events: none; z-index: 99999;
+  transform: translate(-50%,-50%);
+}
+#cursor.hover { width: 22px; height: 22px; border-color: var(--c2); }
+
+body {
+  background: var(--bg);
+  color: var(--tx);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* scanlines */
+body::after {
+  content:'';
+  position:fixed;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px);
+  pointer-events:none;z-index:9000;
+}
+
+/* grid texture */
+body::before {
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(0,255,157,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,255,157,.018) 1px,transparent 1px);
+  background-size:44px 44px;
+  pointer-events:none;z-index:0;
+}
+
+/* glows */
+.g1{position:fixed;top:-220px;left:-180px;width:600px;height:600px;background:radial-gradient(circle,rgba(0,255,157,.07) 0%,transparent 65%);pointer-events:none;z-index:0}
+.g2{position:fixed;bottom:-220px;right:-180px;width:600px;height:600px;background:radial-gradient(circle,rgba(0,212,255,.06) 0%,transparent 65%);pointer-events:none;z-index:0}
+
+/* HEADER */
+header {
+  position:sticky;top:0;z-index:500;
+  background:rgba(2,4,8,.92);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--br);
+  padding:.9rem 2rem;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.hlogo{display:flex;align-items:center;gap:12px}
+.hicon{
+  width:38px;height:38px;border-radius:50%;
+  background:var(--s2);border:1px solid var(--br);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Share Tech Mono',monospace;font-size:10px;
+  color:var(--c);
+  box-shadow:0 0 12px rgba(0,255,157,.15);
+}
+.hbrand{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;color:var(--c);letter-spacing:.04em}
+.htag{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--mu);margin-top:1px}
+.hright{display:flex;align-items:center;gap:12px}
+.hbadge{
+  font-family:'Share Tech Mono',monospace;font-size:10px;
+  padding:4px 12px;border-radius:3px;
+  border:1px solid rgba(0,255,157,.3);
+  color:var(--c);background:rgba(0,255,157,.06);
+  letter-spacing:.08em;
+}
+.htimer{
+  font-family:'Share Tech Mono',monospace;font-size:11px;
+  color:var(--c2);letter-spacing:.06em;
+}
+
+/* HERO */
+.hero{
+  position:relative;z-index:1;
+  padding:3rem 2rem 2rem;
+  max-width:1100px;margin:0 auto;
+}
+.hero-top{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:2rem}
+.hero-left{}
+.hero-eye{
+  font-family:'Share Tech Mono',monospace;font-size:10px;
+  color:var(--c);opacity:.55;letter-spacing:.2em;margin-bottom:.75rem;
+}
+.hero-h1{
+  font-family:'Rajdhani',sans-serif;
+  font-size:clamp(2rem,5vw,3rem);font-weight:700;line-height:1.1;
+  color:#e8fff2;margin-bottom:.6rem;
+}
+.hero-h1 span{color:var(--c)}
+.hero-p{font-size:13px;color:var(--mu);line-height:1.65;max-width:500px}
+
+/* TARGET INPUT */
+.target-box{
+  background:var(--s1);
+  border:1px solid var(--br);
+  border-radius:8px;
+  padding:1.25rem 1.5rem;
+  min-width:300px;
+  position:relative;
+}
+.target-box::before{
+  content:'TARGET';
+  position:absolute;top:-10px;left:14px;
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  color:var(--c);background:var(--s1);padding:0 6px;
+  letter-spacing:.12em;
+}
+.target-input{
+  width:100%;
+  background:transparent;
+  border:none;border-bottom:1px solid rgba(0,255,157,.2);
+  color:var(--c);
+  font-family:'Share Tech Mono',monospace;font-size:13px;
+  padding:6px 0;
+  outline:none;
+  letter-spacing:.05em;
+}
+.target-input::placeholder{color:var(--mu);font-size:12px}
+.target-input:focus{border-bottom-color:var(--c)}
+.launch-all{
+  margin-top:12px;width:100%;
+  padding:9px;
+  background:rgba(0,255,157,.08);
+  border:1px solid rgba(0,255,157,.25);
+  border-radius:4px;
+  font-family:'Share Tech Mono',monospace;font-size:11px;
+  color:var(--c);letter-spacing:.1em;
+  cursor:pointer;
+  transition:all .2s;
+}
+.launch-all:hover{background:rgba(0,255,157,.15);border-color:var(--c);box-shadow:0 0 15px rgba(0,255,157,.15)}
+
+/* STATS ROW */
+.stats-row{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+  gap:10px;margin-bottom:2.5rem;
+}
+.stat-card{
+  background:var(--s1);border:1px solid var(--br);border-radius:6px;
+  padding:.9rem 1rem;
+  position:relative;overflow:hidden;
+}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--c),transparent)}
+.stat-num{font-family:'Share Tech Mono',monospace;font-size:22px;color:var(--c);line-height:1}
+.stat-label{font-size:11px;color:var(--mu);margin-top:4px;letter-spacing:.04em}
+
+/* SEARCH + FILTER */
+.toolbar{
+  display:flex;align-items:center;gap:12px;margin-bottom:1.5rem;flex-wrap:wrap;
+}
+.search-wrap{
+  flex:1;min-width:200px;position:relative;
+}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--mu);font-size:13px;pointer-events:none}
+.search-input{
+  width:100%;
+  background:var(--s1);border:1px solid var(--br);border-radius:4px;
+  color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;
+  padding:8px 10px 8px 32px;outline:none;
+  transition:border-color .2s;
+}
+.search-input::placeholder{color:var(--mu)}
+.search-input:focus{border-color:rgba(0,255,157,.4)}
+.filter-btns{display:flex;gap:6px;flex-wrap:wrap}
+.fb{
+  font-family:'Share Tech Mono',monospace;font-size:10px;
+  padding:6px 14px;border-radius:3px;letter-spacing:.07em;
+  border:1px solid rgba(0,255,157,.15);
+  background:transparent;color:var(--mu);
+  cursor:pointer;transition:all .18s;
+}
+.fb:hover{border-color:rgba(0,255,157,.4);color:var(--tx)}
+.fb.active{background:rgba(0,255,157,.1);border-color:var(--c);color:var(--c)}
+
+/* CATEGORIES */
+.categories{max-width:1100px;margin:0 auto;padding:0 2rem 4rem}
+.cat-section{margin-bottom:2.5rem}
+.cat-header{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:1rem;padding-bottom:.6rem;
+  border-bottom:1px solid var(--br);
+}
+.cat-icon{font-size:16px;color:var(--c);opacity:.7}
+.cat-name{
+  font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;
+  color:var(--tx);letter-spacing:.06em;
+}
+.cat-count{
+  font-family:'Share Tech Mono',monospace;font-size:10px;
+  color:var(--mu);margin-left:auto;letter-spacing:.08em;
+}
+
+/* TOOL GRID */
+.tool-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+  gap:10px;
+}
+
+/* TOOL CARD */
+.tool-card{
+  background:var(--s1);
+  border:1px solid rgba(0,255,157,.08);
+  border-radius:8px;
+  padding:1rem 1.1rem;
+  position:relative;overflow:hidden;
+  transition:all .22s;
+  text-decoration:none;
+  display:block;
+  cursor:pointer;
+}
+.tool-card::before{
+  content:'';
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(0,255,157,.03) 0%,transparent 60%);
+  opacity:0;transition:opacity .22s;
+}
+.tool-card:hover{
+  border-color:rgba(0,255,157,.3);
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(0,0,0,.4),0 0 20px rgba(0,255,157,.06);
+}
+.tool-card:hover::before{opacity:1}
+
+.tc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;gap:8px}
+.tc-name{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:#e8fff2;line-height:1.2}
+.tc-badge{
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  padding:2px 7px;border-radius:2px;letter-spacing:.06em;
+  flex-shrink:0;margin-top:2px;
+}
+.b-free{background:rgba(0,255,157,.1);color:var(--c);border:1px solid rgba(0,255,157,.2)}
+.b-paid{background:rgba(255,170,0,.1);color:var(--wn);border:1px solid rgba(255,170,0,.2)}
+.b-freemium{background:rgba(0,212,255,.1);color:var(--c2);border:1px solid rgba(0,212,255,.2)}
+
+.tc-url{
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  color:var(--mu);margin-bottom:7px;letter-spacing:.04em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.tc-desc{font-size:11.5px;color:#4a7a60;line-height:1.55;margin-bottom:10px}
+.tc-tags{display:flex;flex-wrap:wrap;gap:4px}
+.tc-tag{
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  padding:2px 7px;border-radius:2px;
+  background:rgba(0,255,157,.05);border:1px solid rgba(0,255,157,.1);
+  color:var(--mu);letter-spacing:.04em;
+}
+.tc-arrow{
+  position:absolute;bottom:10px;right:12px;
+  font-size:11px;color:rgba(0,255,157,.25);
+  transition:all .2s;font-family:'Share Tech Mono',monospace;
+}
+.tool-card:hover .tc-arrow{color:var(--c);transform:translate(3px,-1px)}
+
+/* TERMINAL FOOTER */
+.terminal{
+  position:fixed;bottom:0;left:0;right:0;z-index:400;
+  background:rgba(2,4,8,.95);
+  border-top:1px solid var(--br);
+  padding:.5rem 2rem;
+  display:flex;align-items:center;gap:10px;
+  font-family:'Share Tech Mono',monospace;font-size:11px;
+}
+.term-prompt{color:var(--c)}
+.term-text{color:#3a6650;letter-spacing:.04em}
+.term-cursor{
+  display:inline-block;width:7px;height:12px;
+  background:var(--c);margin-left:2px;
+  animation:blink .9s step-end infinite;vertical-align:middle;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* hidden class */
+.hidden{display:none!important}
+
+/* footer credit */
+.page-footer{
+  text-align:center;padding:2rem 2rem 5rem;
+  font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--mu);
+  letter-spacing:.1em;position:relative;z-index:1;
+}
+
+/* animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.cat-section{animation:fadeUp .4s ease both}
+.cat-section:nth-child(2){animation-delay:.05s}
+.cat-section:nth-child(3){animation-delay:.1s}
+.cat-section:nth-child(4){animation-delay:.15s}
+.cat-section:nth-child(5){animation-delay:.2s}
+.cat-section:nth-child(6){animation-delay:.25s}
+.cat-section:nth-child(7){animation-delay:.3s}
+.cat-section:nth-child(8){animation-delay:.35s}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-dot"></div>
+<div class="g1"></div>
+<div class="g2"></div>
+
+<!-- HEADER -->
+<header>
+  <div class="hlogo">
+    <div class="hicon">{&lt;/&gt;}</div>
+    <div>
+      <div class="hbrand">codebites26</div>
+      <div class="htag">// FOOTPRINTING TOOLKIT</div>
+    </div>
+  </div>
+  <div class="hright">
+    <span class="hbadge">OSINT</span>
+    <span class="htimer" id="clock"></span>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero" style="position:relative;z-index:1">
+  <div class="hero-top">
+    <div class="hero-left">
+      <div class="hero-eye">// ETHICAL HACKING — PHASE 01</div>
+      <h1 class="hero-h1">Footprinting <span>&amp; Reconnaissance</span><br>Live Toolkit</h1>
+      <p class="hero-p">Sab publicly available OSINT tools ek jagah. Target domain ya IP daalo, tool open ho jayega. Sirf ethical use ke liye.</p>
+    </div>
+
+    <!-- TARGET INPUT -->
+    <div class="target-box">
+      <input type="text" class="target-input" id="targetInput" placeholder="target.com or IP address" autocomplete="off" spellcheck="false">
+      <button class="launch-all" id="launchBtn" onclick="launchAll()">[ LAUNCH ALL TOOLS FOR TARGET ]</button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num" id="totalCount">50</div>
+      <div class="stat-label">TOTAL TOOLS</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">8</div>
+      <div class="stat-label">CATEGORIES</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--c)">38</div>
+      <div class="stat-label">FREE TOOLS</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--c2)">9</div>
+      <div class="stat-label">FREEMIUM</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--wn)">3</div>
+      <div class="stat-label">PAID TOOLS</div>
+    </div>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="categories">
+  <div class="toolbar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="searchInput" placeholder="Search tools..." oninput="filterTools()">
+    </div>
+    <div class="filter-btns">
+      <button class="fb active" onclick="setFilter('all',this)">ALL</button>
+      <button class="fb" onclick="setFilter('DNS',this)">DNS</button>
+      <button class="fb" onclick="setFilter('WHOIS',this)">WHOIS</button>
+      <button class="fb" onclick="setFilter('IP',this)">IP</button>
+      <button class="fb" onclick="setFilter('SCAN',this)">PORT SCAN</button>
+      <button class="fb" onclick="setFilter('OSINT',this)">OSINT</button>
+      <button class="fb" onclick="setFilter('SSL',this)">SSL</button>
+      <button class="fb" onclick="setFilter('EMAIL',this)">EMAIL</button>
+      <button class="fb" onclick="setFilter('WEB',this)">WEB</button>
+    </div>
+  </div>
+
+  <!-- CATEGORIES rendered by JS -->
+  <div id="catContainer"></div>
+</div>
+
+<!-- FOOTER CREDIT -->
+<div class="page-footer">
+  @CODEBITES26 — EDUCATIONAL USE ONLY — ETHICAL HACKING TOOLKIT v1.0
+</div>
+
+<!-- TERMINAL BAR -->
+<div class="terminal">
+  <span class="term-prompt">codebites26@kali:~$</span>
+  <span class="term-text" id="termText">Ready. Enter target domain or IP above to auto-fill all tools.</span>
+  <span class="term-cursor"></span>
+</div>
+
+<script>
+/* ── CURSOR ── */
+const cur=document.getElementById('cursor'),dot=document.getElementById('cursor-dot');
+document.addEventListener('mousemove',e=>{
+  cur.style.left=e.clientX+'px';cur.style.top=e.clientY+'px';
+  dot.style.left=e.clientX+'px';dot.style.top=e.clientY+'px';
+});
+document.querySelectorAll('a,button,.tool-card,.fb').forEach(el=>{
+  el.addEventListener('mouseenter',()=>cur.classList.add('hover'));
+  el.addEventListener('mouseleave',()=>cur.classList.remove('hover'));
+});
+
+/* ── CLOCK ── */
+function tick(){
+  const n=new Date();let h=n.getHours(),m=n.getMinutes(),s=n.getSeconds();
+  const ap=h>=12?'PM':'AM';h=h%12||12;
+  document.getElementById('clock').textContent=
+    h+':'+(m<10?'0'+m:m)+':'+(s<10?'0'+s:s)+' '+ap;
+}
+tick();setInterval(tick,1000);
+
+/* ── TOOL DATA ── */
+const categories=[
+  {
+    id:'DNS',name:'DNS Enumeration',icon:'🌐',
+    tools:[
+      {name:'DNSdumpster',url:'https://dnsdumpster.com',desc:'DNS recon & research. Finds subdomains, MX records, hosts.',tags:['subdomain','mx','host'],cost:'free'},
+      {name:'ViewDNS.info',url:'https://viewdns.info',desc:'Multi-tool: reverse IP, WHOIS, traceroute, DNS report.',tags:['reverse-ip','dns','whois'],cost:'free'},
+      {name:'MXToolbox',url:'https://mxtoolbox.com',desc:'DNS lookup, blacklist check, SMTP diagnostics.',tags:['mx','smtp','blacklist'],cost:'free'},
+      {name:'DNSrecon (online)',url:'https://hackertarget.com/dns-lookup',desc:'DNS lookup via HackerTarget. Finds A, MX, NS, TXT records.',tags:['A','NS','TXT'],cost:'free'},
+      {name:'SecurityTrails',url:'https://securitytrails.com',desc:'Historical DNS data, subdomains, IP history.',tags:['historical','subdomain'],cost:'freemium'},
+      {name:'Sublist3r (web)',url:'https://hackertarget.com/find-dns-host-records',desc:'Find all DNS host records for a domain.',tags:['host','subdomain'],cost:'free'},
+    ]
+  },
+  {
+    id:'WHOIS',name:'WHOIS & Registration',icon:'📋',
+    tools:[
+      {name:'WHOIS.domaintools',url:'https://whois.domaintools.com',desc:'Detailed WHOIS with registration history and ownership.',tags:['owner','registrar','dates'],cost:'freemium'},
+      {name:'ICANN WHOIS',url:'https://lookup.icann.org',desc:'Official ICANN WHOIS lookup. Most accurate registrar data.',tags:['registrar','official'],cost:'free'},
+      {name:'who.is',url:'https://who.is',desc:'Clean WHOIS interface with registration, expiry, nameservers.',tags:['registration','ns'],cost:'free'},
+      {name:'Whoisology',url:'https://whoisology.com',desc:'Reverse WHOIS — find all domains owned by an email or person.',tags:['reverse','email','owner'],cost:'freemium'},
+      {name:'DomainTools Iris',url:'https://iris.domaintools.com',desc:'Advanced domain investigation and pivot tool.',tags:['investigation','pivot'],cost:'paid'},
+    ]
+  },
+  {
+    id:'IP',name:'IP & Geolocation',icon:'📍',
+    tools:[
+      {name:'Shodan',url:'https://shodan.io',desc:'Search engine for internet-connected devices. Ports, banners, vulns.',tags:['ports','banners','iot'],cost:'freemium'},
+      {name:'Censys',url:'https://search.censys.io',desc:'Scan internet hosts. Certificates, ports, software versions.',tags:['hosts','certs','ports'],cost:'freemium'},
+      {name:'IPinfo.io',url:'https://ipinfo.io',desc:'IP geolocation, ASN, ISP, reverse DNS, abuse contacts.',tags:['geo','asn','isp'],cost:'free'},
+      {name:'AbuseIPDB',url:'https://www.abuseipdb.com',desc:'Check if an IP is reported for malicious activity.',tags:['abuse','reputation'],cost:'free'},
+      {name:'BGPView',url:'https://bgpview.io',desc:'ASN info, IP prefixes, peering data, routing.',tags:['asn','bgp','routing'],cost:'free'},
+      {name:'MaxMind GeoIP',url:'https://www.maxmind.com/en/geoip-demo',desc:'ISP and geolocation data for any IP address.',tags:['geo','isp'],cost:'free'},
+      {name:'GreyNoise',url:'https://viz.greynoise.io',desc:'See what IPs are scanning the internet. Noise classification.',tags:['scanning','threat','noise'],cost:'freemium'},
+    ]
+  },
+  {
+    id:'SCAN',name:'Port & Vulnerability Scan',icon:'🔍',
+    tools:[
+      {name:'Nmap Online',url:'https://hackertarget.com/nmap-online-port-scanner',desc:'Online Nmap port scanner. Find open ports and services.',tags:['ports','nmap','services'],cost:'free'},
+      {name:'HackerTarget',url:'https://hackertarget.com',desc:'Online security tools — Nmap, traceroute, DNS, HTTP headers.',tags:['nmap','dns','http'],cost:'free'},
+      {name:'Pentest-Tools Scanner',url:'https://pentest-tools.com/network-vulnerability-scanner',desc:'Network vulnerability scanning and service detection.',tags:['vuln','services','network'],cost:'freemium'},
+      {name:'Nessus (free)',url:'https://www.tenable.com/products/nessus/nessus-essentials',desc:'Free vulnerability scanner for up to 16 IPs.',tags:['vuln','scan','cve'],cost:'free'},
+      {name:'FullHunt',url:'https://fullhunt.io',desc:'Attack surface discovery — subdomains, open ports, tech stack.',tags:['surface','subdomain','stack'],cost:'freemium'},
+    ]
+  },
+  {
+    id:'OSINT',name:'OSINT & People Search',icon:'🕵️',
+    tools:[
+      {name:'Maltego CE',url:'https://www.maltego.com/ce-registration',desc:'Graph-based OSINT and link analysis. Free community edition.',tags:['graph','links','social'],cost:'free'},
+      {name:'theHarvester (web)',url:'https://hackertarget.com/email-finder',desc:'Email harvesting — find emails linked to a domain.',tags:['email','harvest'],cost:'free'},
+      {name:'Hunter.io',url:'https://hunter.io',desc:'Find all email addresses for a company domain.',tags:['email','company'],cost:'freemium'},
+      {name:'Phonebook.cz',url:'https://phonebook.cz',desc:'Emails, domains, URLs from intelligence sources.',tags:['email','domain','url'],cost:'free'},
+      {name:'IntelX',url:'https://intelx.io',desc:'Search paste sites, dark web, data leaks by domain/email.',tags:['darkweb','leak','paste'],cost:'freemium'},
+      {name:'OSINT Framework',url:'https://osintframework.com',desc:'Massive tree of OSINT tools organized by category.',tags:['framework','directory'],cost:'free'},
+      {name:'Recon-ng (docs)',url:'https://github.com/lanmaster53/recon-ng',desc:'Full-featured recon framework for web-based OSINT.',tags:['framework','recon','module'],cost:'free'},
+      {name:'SpiderFoot HX',url:'https://www.spiderfoot.net',desc:'Automated OSINT — scans 200+ sources for target.',tags:['auto','200+','sources'],cost:'freemium'},
+    ]
+  },
+  {
+    id:'SSL',name:'SSL / Certificate Analysis',icon:'🔒',
+    tools:[
+      {name:'SSL Labs',url:'https://www.ssllabs.com/ssltest',desc:'Deep SSL/TLS analysis — cert chain, protocol, weaknesses.',tags:['tls','chain','grade'],cost:'free'},
+      {name:'crt.sh',url:'https://crt.sh',desc:'Certificate transparency log search. Find all certs for a domain.',tags:['cert','transparency','subdomains'],cost:'free'},
+      {name:'CertSpotter',url:'https://sslmate.com/certspotter',desc:'Monitor issued certs for your domains in real time.',tags:['monitor','issued'],cost:'free'},
+      {name:'Censys Certs',url:'https://search.censys.io/certificates',desc:'Search all certificates across the internet by domain.',tags:['search','all-certs'],cost:'freemium'},
+    ]
+  },
+  {
+    id:'EMAIL',name:'Email Intelligence',icon:'✉️',
+    tools:[
+      {name:'HaveIBeenPwned',url:'https://haveibeenpwned.com',desc:'Check if email appears in known data breaches.',tags:['breach','leak','password'],cost:'free'},
+      {name:'Hunter.io Verify',url:'https://hunter.io/email-verifier',desc:'Verify if an email address is real and deliverable.',tags:['verify','deliverable'],cost:'freemium'},
+      {name:'Email Header Analyzer',url:'https://mxtoolbox.com/EmailHeaders.aspx',desc:'Analyze raw email headers — trace origin, spam score.',tags:['header','origin','spam'],cost:'free'},
+      {name:'DKIM Validator',url:'https://dmarcian.com/dkim-inspector',desc:'Check DKIM records for a domain. Email authentication.',tags:['dkim','auth','spf'],cost:'free'},
+      {name:'Mail Header Analyzer',url:'https://toolbox.googleapps.com/apps/messageheader',desc:"Google's email header analyzer. Trace delivery path.",tags:['google','trace','delivery'],cost:'free'},
+    ]
+  },
+  {
+    id:'WEB',name:'Web & Technology Recon',icon:'🕸️',
+    tools:[
+      {name:'Wayback Machine',url:'https://web.archive.org',desc:'See archived versions of any website. Historical recon.',tags:['archive','history','snapshots'],cost:'free'},
+      {name:'BuiltWith',url:'https://builtwith.com',desc:'Detect tech stack — CMS, frameworks, hosting, trackers.',tags:['stack','cms','framework'],cost:'freemium'},
+      {name:'Wappalyzer',url:'https://www.wappalyzer.com',desc:'Identify technologies on websites. Browser extension + API.',tags:['tech','cms','server'],cost:'free'},
+      {name:'Netcraft',url:'https://sitereport.netcraft.com',desc:'Site report — hosting, OS, webserver, uptime history.',tags:['hosting','os','uptime'],cost:'free'},
+      {name:'Google Dorking',url:'https://www.google.com/search?q=site%3A',desc:'Advanced Google search operators for hidden info.',tags:['google','dork','advanced'],cost:'free'},
+      {name:'Shodan CVE Search',url:'https://cvedb.shodan.io',desc:'Search CVEs associated with services found on a target.',tags:['cve','vuln','shodan'],cost:'free'},
+      {name:'Pastebin Search',url:'https://psbdmp.ws',desc:'Search leaked pastes for target domains or emails.',tags:['leak','paste','dump'],cost:'free'},
+    ]
+  }
+];
+
+let activeFilter='all';
+
+function buildCards(cat){
+  return cat.tools.map(t=>{
+    const filterTag=cat.id;
+    return `
+    <a class="tool-card" href="${t.url}" target="_blank" rel="noopener" data-filter="${filterTag}" data-name="${t.name.toLowerCase()}" data-desc="${t.desc.toLowerCase()}" onclick="log('${t.name}')">
+      <div class="tc-top">
+        <div class="tc-name">${t.name}</div>
+        <span class="tc-badge ${t.cost==='free'?'b-free':t.cost==='paid'?'b-paid':'b-freemium'}">${t.cost.toUpperCase()}</span>
+      </div>
+      <div class="tc-url">${t.url.replace('https://','')}</div>
+      <div class="tc-desc">${t.desc}</div>
+      <div class="tc-tags">${t.tags.map(tg=>`<span class="tc-tag">${tg}</span>`).join('')}</div>
+      <span class="tc-arrow">[→]</span>
+    </a>`;
+  }).join('');
+}
+
+function buildAll(){
+  const c=document.getElementById('catContainer');
+  c.innerHTML=categories.map(cat=>`
+    <div class="cat-section" id="cat-${cat.id}">
+      <div class="cat-header">
+        <span class="cat-icon">${cat.icon}</span>
+        <span class="cat-name">${cat.name}</span>
+        <span class="cat-count">${cat.tools.length} TOOLS</span>
+      </div>
+      <div class="tool-grid">${buildCards(cat)}</div>
+    </div>`).join('');
+}
+
+function setFilter(f,btn){
+  activeFilter=f;
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  filterTools();
+}
+
+function filterTools(){
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('.tool-card').forEach(card=>{
+    const matchFilter=activeFilter==='all'||card.dataset.filter===activeFilter;
+    const matchSearch=!q||card.dataset.name.includes(q)||card.dataset.desc.includes(q);
+    card.classList.toggle('hidden',!(matchFilter&&matchSearch));
+  });
+  document.querySelectorAll('.cat-section').forEach(sec=>{
+    const visible=[...sec.querySelectorAll('.tool-card')].some(c=>!c.classList.contains('hidden'));
+    sec.classList.toggle('hidden',!visible);
+  });
+}
+
+function launchAll(){
+  const t=document.getElementById('targetInput').value.trim();
+  if(!t){setTerm('Please enter a target domain or IP first.');return;}
+  const urlMap={
+    'https://dnsdumpster.com': `https://dnsdumpster.com/?q=${t}`,
+    'https://who.is': `https://who.is/whois/${t}`,
+    'https://ipinfo.io': `https://ipinfo.io/${t}`,
+    'https://shodan.io': `https://shodan.io/search?query=${t}`,
+    'https://crt.sh': `https://crt.sh/?q=${t}`,
+    'https://haveibeenpwned.com': `https://haveibeenpwned.com/unifiedsearch/${t}`,
+    'https://web.archive.org': `https://web.archive.org/web/*/${t}`,
+    'https://builtwith.com': `https://builtwith.com/?${t}`,
+  };
+  let opened=0;
+  Object.values(urlMap).forEach(u=>{window.open(u,'_blank');opened++;});
+  setTerm(`Launched ${opened} core tools for target: ${t}`);
+}
+
+function log(name){
+  setTerm(`Accessing: ${name}...`);
+}
+
+function setTerm(msg){
+  document.getElementById('termText').textContent=msg;
+}
+
+/* inject target into tool urls on card click */
+document.addEventListener('click',function(e){
+  const card=e.target.closest('.tool-card');
+  if(!card)return;
+  const t=document.getElementById('targetInput').value.trim();
+  if(!t)return;
+  e.preventDefault();
+  const base=card.href;
+  const injects={
+    'dnsdumpster.com': base+'?q='+t,
+    'hackertarget.com/dns-lookup': 'https://hackertarget.com/dns-lookup/?q='+t,
+    'hackertarget.com/nmap': 'https://hackertarget.com/nmap-online-port-scanner/?q='+t,
+    'hackertarget.com/email': 'https://hackertarget.com/email-finder/?q='+t,
+    'viewdns.info': 'https://viewdns.info/iphistory/?domain='+t,
+    'who.is': 'https://who.is/whois/'+t,
+    'whois.domaintools.com': 'https://whois.domaintools.com/'+t,
+    'lookup.icann.org': 'https://lookup.icann.org/en/lookup?name='+t,
+    'ipinfo.io': 'https://ipinfo.io/'+t,
+    'abuseipdb.com': 'https://www.abuseipdb.com/check/'+t,
+    'shodan.io': 'https://shodan.io/search?query='+t,
+    'search.censys.io': 'https://search.censys.io/search?resource=hosts&q='+t,
+    'bgpview.io': 'https://bgpview.io/search?search_query='+t,
+    'crt.sh': 'https://crt.sh/?q='+t,
+    'securitytrails.com': 'https://securitytrails.com/domain/'+t+'/dns',
+    'web.archive.org': 'https://web.archive.org/web/*/'+t,
+    'builtwith.com': 'https://builtwith.com/?'+t,
+    'netcraft.com': 'https://sitereport.netcraft.com/?url='+t,
+    'mxtoolbox.com': 'https://mxtoolbox.com/SuperTool.aspx?action=dns%3a'+t,
+    'haveibeenpwned.com': 'https://haveibeenpwned.com/unifiedsearch/'+t,
+    'hunter.io': 'https://hunter.io/search/'+t,
+    'ssllabs.com': 'https://www.ssllabs.com/ssltest/analyze.html?d='+t,
+    'intelx.io': 'https://intelx.io/?s='+t,
+    'fullhunt.io': 'https://fullhunt.io/search?q='+t,
+    'wappalyzer.com': 'https://www.wappalyzer.com/lookup/'+t,
+    'psbdmp.ws': 'https://psbdmp.ws/?search='+t,
+    'greynoise.io': 'https://viz.greynoise.io/ip/'+t,
+  };
+  let opened=false;
+  for(const[key,url] of Object.entries(injects)){
+    if(base.includes(key)){window.open(url,'_blank');opened=true;break;}
+  }
+  if(!opened)window.open(base,'_blank');
+  setTerm(`Launched ${card.querySelector('.tc-name').textContent} for target: ${t}`);
+});
+
+buildAll();
+
+// count total
+document.getElementById('totalCount').textContent=categories.reduce((a,c)=>a+c.tools.length,0);
+</script>
+</body>
+</html>

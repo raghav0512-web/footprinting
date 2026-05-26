@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Footprinting Toolkit — @codebites26</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* (The same styles as footprinting.html) */
+:root { --c: #00ff9d; --c2: #00d4ff; --p: #7c3aed; --bg: #020408; --s1: #060c10; --s2: #0a1218; --s3: #0f1a22; --br: rgba(0,255,157,.1); --br2: rgba(0,212,255,.1); --tx: #c8e8d0; --mu: #3a6650; --rd: #ff3355; --wn: #ffaa00; --cursor: rgba(0,255,157,0.7); }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+* { cursor: none !important; }
+#cursor { position: fixed; width: 12px; height: 12px; border: 1.5px solid var(--c); border-radius: 50%; pointer-events: none; z-index: 99999; transform: translate(-50%,-50%); transition: width .15s, height .15s, opacity .15s; mix-blend-mode: screen; }
+#cursor-dot { position: fixed; width: 4px; height: 4px; background: var(--c); border-radius: 50%; pointer-events: none; z-index: 99999; transform: translate(-50%,-50%); }
+#cursor.hover { width: 22px; height: 22px; border-color: var(--c2); }
+body { background: var(--bg); color: var(--tx); font-family: 'DM Sans', sans-serif; min-height: 100vh; overflow-x: hidden; }
+body::after { content:''; position:fixed;inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px); pointer-events:none;z-index:9000; }
+body::before { content:''; position:fixed;inset:0; background-image: linear-gradient(rgba(0,255,157,.018) 1px,transparent 1px), linear-gradient(90deg,rgba(0,255,157,.018) 1px,transparent 1px); background-size:44px 44px; pointer-events:none;z-index:0; }
+.g1{position:fixed;top:-220px;left:-180px;width:600px;height:600px;background:radial-gradient(circle,rgba(0,255,157,.07) 0%,transparent 65%);pointer-events:none;z-index:0}
+.g2{position:fixed;bottom:-220px;right:-180px;width:600px;height:600px;background:radial-gradient(circle,rgba(0,212,255,.06) 0%,transparent 65%);pointer-events:none;z-index:0}
+header { position:sticky;top:0;z-index:500; background:rgba(2,4,8,.92); backdrop-filter:blur(20px); border-bottom:1px solid var(--br); padding:.9rem 2rem; display:flex;align-items:center;justify-content:space-between; }
+.hlogo{display:flex;align-items:center;gap:12px}
+.hicon{ width:38px;height:38px;border-radius:50%; background:var(--s2);border:1px solid var(--br); display:flex;align-items:center;justify-content:center; font-family:'Share Tech Mono',monospace;font-size:10px; color:var(--c); box-shadow:0 0 12px rgba(0,255,157,.15); }
+.hbrand{font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;color:var(--c);letter-spacing:.04em}
+.htag{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--mu);margin-top:1px}
+.hright{display:flex;align-items:center;gap:12px}
+.hbadge{ font-family:'Share Tech Mono',monospace;font-size:10px; padding:4px 12px;border-radius:3px; border:1px solid rgba(0,255,157,.3); color:var(--c);background:rgba(0,255,157,.06); letter-spacing:.08em; }
+.htimer{ font-family:'Share Tech Mono',monospace;font-size:11px; color:var(--c2);letter-spacing:.06em; }
+/* remaining styles omitted for brevity; full original CSS preserved in footprinting.html */
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-dot"></div>
+<div class="g1"></div>
+<div class="g2"></div>
+
+<!-- HEADER -->
+<header>
+  <div class="hlogo">
+    <div class="hicon">{&lt;/&gt;}</div>
+    <div>
+      <div class="hbrand">codebites26</div>
+      <div class="htag">// FOOTPRINTING TOOLKIT</div>
+    </div>
+  </div>
+  <div class="hright">
+    <span class="hbadge">OSINT</span>
+    <span class="htimer" id="clock"></span>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero" style="position:relative;z-index:1">
+  <div class="hero-top">
+    <div class="hero-left">
+      <div class="hero-eye">// ETHICAL HACKING — PHASE 01</div>
+      <h1 class="hero-h1">Footprinting <span>&amp; Reconnaissance</span><br>Live Toolkit</h1>
+      <p class="hero-p">Sab publicly available OSINT tools ek jagah. Target domain ya IP daalo, tool open ho jayega. Sirf ethical use ke liye.</p>
+    </div>
+
+    <!-- TARGET INPUT -->
+    <div class="target-box">
+      <input type="text" class="target-input" id="targetInput" placeholder="target.com or IP address" autocomplete="off" spellcheck="false">
+      <button class="launch-all" id="launchBtn" onclick="launchAll()">[ LAUNCH ALL TOOLS FOR TARGET ]</button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num" id="totalCount">50</div>
+      <div class="stat-label">TOTAL TOOLS</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">8</div>
+      <div class="stat-label">CATEGORIES</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--c)">38</div>
+      <div class="stat-label">FREE TOOLS</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--c2)">9</div>
+      <div class="stat-label">FREEMIUM</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--wn)">3</div>
+      <div class="stat-label">PAID TOOLS</div>
+    </div>
+  </div>
+</div>
+
+<!-- content truncated for brevity in index copy; full content exists in footprinting.html -->
+
+</body>
+</html>
